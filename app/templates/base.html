@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}股智先知 - A股智能分析预测{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">📈 股智先知</div>
+        <div class="nav-links">
+            <a href="/" class="{% if active == 'home' %}active{% endif %}">首页</a>
+            <a href="/predictions" class="{% if active == 'predictions' %}active{% endif %}">今日预测</a>
+            <a href="/news" class="{% if active == 'news' %}active{% endif %}">新闻分析</a>
+            <a href="/review" class="{% if active == 'review' %}active{% endif %}">复盘回顾</a>
+        </div>
+    </nav>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="footer">
+        <p>⚠️ 免责声明：本系统仅供学习研究，不构成投资建议。股市有风险，投资需谨慎。</p>
+    </footer>
+</body>
+</html>

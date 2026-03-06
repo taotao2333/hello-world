@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}新闻分析 - 股智先知{% endblock %}
+{% block content %}
+<h1>📰 新闻与政策分析</h1>
+
+{% if sector_sentiment %}
+<section class="section">
+    <h2>板块新闻情感汇总</h2>
+    <table class="data-table">
+        <thead>
+            <tr><th>板块</th><th>新闻数</th><th>平均情感</th><th>正面</th><th>负面</th></tr>
+        </thead>
+        <tbody>
+            {% for sector, data in sector_sentiment.items() %}
+            <tr>
+                <td><strong>{{ sector }}</strong></td>
+                <td>{{ data.count }}</td>
+                <td class="{{ 'up' if data.avg_sentiment > 0 else 'down' if data.avg_sentiment < 0 else '' }}">
+                    {{ "%+.2f"|format(data.avg_sentiment) }}
+                </td>
+                <td class="up">{{ data.positive }}</td>
+                <td class="down">{{ data.negative }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+{% if articles %}
+<section class="section">
+    <h2>最新新闻 ({{ articles|length }} 条)</h2>
+    <div class="news-cards">
+        {% for a in articles[:50] %}
+        <div class="news-card {{ 'policy' if a.is_policy else 'intl' if a.is_international else '' }}">
+            <div class="news-header">
+                {% if a.is_policy %}<span class="tag tag-policy">政策</span>{% endif %}
+                {% if a.is_international %}<span class="tag tag-intl">国际</span>{% endif %}
+                {% if a.related_sectors %}
+                    {% for s in a.related_sectors.split(',') %}
+                        {% if s.strip() %}<span class="tag tag-sector">{{ s.strip() }}</span>{% endif %}
+                    {% endfor %}
+                {% endif %}
+                <span class="sentiment {{ 'pos' if a.sentiment_score > 0 else 'neg' if a.sentiment_score < 0 else 'neu' }}">
+                    {{ "%+.1f"|format(a.sentiment_score) }}
+                </span>
+            </div>
+            <h4>{{ a.title }}</h4>
+            <p class="news-meta">{{ a.source }} | {{ a.category | default('综合') }}</p>
+            {% if a.summary %}<p class="news-summary">{{ a.summary[:200] }}</p>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% else %}
+<div class="empty-state">
+    <p>暂无新闻数据。请先采集新闻。</p>
+    <form action="/api/collect" method="post">
+        <button type="submit" class="btn btn-primary">立即采集</button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

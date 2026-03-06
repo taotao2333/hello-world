@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}复盘回顾 - 股智先知{% endblock %}
+{% block content %}
+<h1>📊 复盘回顾</h1>
+
+{% if review %}
+<section class="section">
+    <h2>最新复盘 — {{ review.target_date }}</h2>
+    <div class="review-summary">
+        <div class="grid-3">
+            <div class="stat-card">
+                <div class="stat-label">总预测数</div>
+                <div class="stat-value">{{ review.total_predictions }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">准确数</div>
+                <div class="stat-value up">{{ review.accurate_count }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">准确率</div>
+                <div class="stat-value {{ 'up' if review.accuracy_rate >= 50 else 'down' }}">
+                    {{ "%.1f"|format(review.accuracy_rate) }}%
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if review.market_summary %}
+    <div class="review-block">
+        <h3>市场概况</h3>
+        <p>{{ review.market_summary }}</p>
+    </div>
+    {% endif %}
+
+    {% if review.results %}
+    <h3>逐条复盘</h3>
+    <table class="data-table">
+        <thead>
+            <tr><th>股票</th><th>板块</th><th>预测</th><th>实际</th><th>结果</th><th>分析</th></tr>
+        </thead>
+        <tbody>
+            {% for r in review.results %}
+            <tr>
+                <td><strong>{{ r.stock_name }}</strong><br><small>{{ r.stock_code }}</small></td>
+                <td>{{ r.sector }}</td>
+                <td class="{{ 'up' if r.predicted_direction == '涨' else 'down' }}">
+                    {{ r.predicted_direction }} {{ "%+.2f"|format(r.predicted_change_pct) }}%
+                </td>
+                <td class="{{ 'up' if r.actual_change_pct > 0 else 'down' }}">
+                    {{ "%+.2f"|format(r.actual_change_pct) }}%
+                </td>
+                <td>{{ '✅' if r.is_accurate else '❌' }}</td>
+                <td class="reason-cell">{{ r.reason }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if review.accurate_reasons %}
+    <div class="review-block success">
+        <h3>✅ 准确预测原因</h3>
+        {% for r in review.accurate_reasons %}
+        <p>{{ r }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if review.inaccurate_reasons %}
+    <div class="review-block warning">
+        <h3>❌ 不准确原因</h3>
+        {% for r in review.inaccurate_reasons %}
+        <p>{{ r }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if review.lessons_learned %}
+    <div class="review-block info">
+        <h3>📝 经验总结</h3>
+        <p>{{ review.lessons_learned }}</p>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if history %}
+<section class="section">
+    <h2>历史复盘记录</h2>
+    <table class="data-table">
+        <thead>
+            <tr><th>复盘日期</th><th>目标日期</th><th>预测数</th><th>准确数</th><th>准确率</th><th>总结</th></tr>
+        </thead>
+        <tbody>
+            {% for h in history %}
+            <tr>
+                <td>{{ h.review_date }}</td>
+                <td>{{ h.target_date }}</td>
+                <td>{{ h.total_predictions }}</td>
+                <td>{{ h.accurate_count }}</td>
+                <td class="{{ 'up' if h.accuracy_rate >= 50 else 'down' }}">{{ "%.1f"|format(h.accuracy_rate) }}%</td>
+                <td>{{ h.lessons_learned | default('') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% else %}
+<div class="empty-state">
+    <p>暂无复盘数据。预测生成后，次日可执行复盘。</p>
+    <form action="/api/review" method="post">
+        <button type="submit" class="btn btn-warning">执行复盘</button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

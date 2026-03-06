@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}股智先知 - 首页{% endblock %}
+{% block content %}
+<div class="hero">
+    <h1>股智先知 — A股智能分析预测系统</h1>
+    <p class="subtitle">每日采集新闻政策 · 分析行业情感 · 结合技术面 · 生成预测 · 次日复盘</p>
+</div>
+
+<div class="grid-3">
+    <div class="card">
+        <div class="card-icon">📰</div>
+        <h3>新闻采集</h3>
+        <p>实时采集国内政策、财经、国际新闻，分析行业关联与情感倾向</p>
+        <div class="stat">{{ stats.total_news | default(0) }} 条</div>
+    </div>
+    <div class="card">
+        <div class="card-icon">🔮</div>
+        <h3>智能预测</h3>
+        <p>综合新闻情感和技术指标，预测板块和个股走势</p>
+        <div class="stat">{{ stats.total_predictions | default(0) }} 条</div>
+    </div>
+    <div class="card">
+        <div class="card-icon">📊</div>
+        <h3>复盘回顾</h3>
+        <p>每日复盘昨日预测，分析准确与失误原因，持续改进</p>
+        <div class="stat">{{ stats.accuracy_rate | default('--') }}%</div>
+    </div>
+</div>
+
+{% if market %}
+<section class="section">
+    <h2>📈 大盘概况</h2>
+    <div class="index-grid">
+        {% for idx in market.indices %}
+        <div class="index-card {{ 'up' if idx.change_pct > 0 else 'down' if idx.change_pct < 0 else '' }}">
+            <div class="index-name">{{ idx.name }}</div>
+            <div class="index-price">{{ "%.2f"|format(idx.price) }}</div>
+            <div class="index-change">{{ "%+.2f"|format(idx.change_pct) }}%</div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if market and market.hot_sectors %}
+<section class="section">
+    <h2>🔥 热门板块 TOP 10</h2>
+    <table class="data-table">
+        <thead>
+            <tr><th>板块</th><th>涨跌幅</th><th>成交额(亿)</th></tr>
+        </thead>
+        <tbody>
+            {% for s in market.hot_sectors %}
+            <tr>
+                <td>{{ s.name }}</td>
+                <td class="{{ 'up' if s.change_pct > 0 else 'down' }}">{{ "%+.2f"|format(s.change_pct) }}%</td>
+                <td>{{ "%.1f"|format(s.turnover / 100000000) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+<section class="section">
+    <h2>⚡ 快速操作</h2>
+    <div class="actions">
+        <form action="/api/collect" method="post" style="display:inline">
+            <button type="submit" class="btn btn-primary">采集新闻</button>
+        </form>
+        <form action="/api/predict" method="post" style="display:inline">
+            <button type="submit" class="btn btn-success">生成预测</button>
+        </form>
+        <form action="/api/review" method="post" style="display:inline">
+            <button type="submit" class="btn btn-warning">执行复盘</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

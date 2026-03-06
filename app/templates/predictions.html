@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}今日预测 - 股智先知{% endblock %}
+{% block content %}
+<h1>🔮 今日预测</h1>
+<p class="meta">生成时间: {{ data.generated_at | default('--') }} | 分析新闻: {{ data.total_news | default(0) }} 条 | 政策新闻: {{ data.policy_news_count | default(0) }} 条 | 国际新闻: {{ data.international_news_count | default(0) }} 条</p>
+
+{% if data.predictions %}
+<section class="section">
+    <h2>📊 个股预测排行（按预测波动幅度排序）</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>股票</th><th>板块</th><th>方向</th><th>预测涨跌</th>
+                <th>置信度</th><th>当前价</th><th>今日涨跌</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in data.predictions %}
+            <tr>
+                <td><strong>{{ p.stock_name }}</strong><br><small>{{ p.stock_code }}</small></td>
+                <td>{{ p.sector }}</td>
+                <td class="{{ 'up' if p.predicted_direction == '涨' else 'down' if p.predicted_direction == '跌' else '' }}">
+                    {{ p.predicted_direction }}
+                </td>
+                <td class="{{ 'up' if p.predicted_change_pct > 0 else 'down' }}">
+                    {{ "%+.2f"|format(p.predicted_change_pct) }}%
+                </td>
+                <td>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: {{ (p.confidence * 100)|int }}%"></div>
+                        <span>{{ "%.0f"|format(p.confidence * 100) }}%</span>
+                    </div>
+                </td>
+                <td>{{ "%.2f"|format(p.current_price) }}</td>
+                <td class="{{ 'up' if p.today_change > 0 else 'down' }}">{{ "%+.2f"|format(p.today_change) }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+{% for p in data.predictions[:5] %}
+<details class="prediction-detail">
+    <summary>{{ p.stock_name }}({{ p.stock_code }}) — {{ p.predicted_direction }} {{ "%+.2f"|format(p.predicted_change_pct) }}%</summary>
+    <div class="detail-content">
+        <pre>{{ p.reasoning }}</pre>
+        {% if p.news_factors %}
+        <p><strong>相关新闻：</strong>{{ p.news_factors }}</p>
+        {% endif %}
+        {% if p.technical_factors %}
+        <p><strong>技术因素：</strong>{{ p.technical_factors }}</p>
+        {% endif %}
+    </div>
+</details>
+{% endfor %}
+{% else %}
+<div class="empty-state">
+    <p>暂无预测数据。请先点击"生成预测"。</p>
+    <form action="/api/predict" method="post">
+        <button type="submit" class="btn btn-success">生成今日预测</button>
+    </form>
+</div>
+{% endif %}
+
+{% if data.policy_news %}
+<section class="section">
+    <h2>🏛️ 重要政策新闻</h2>
+    <ul class="news-list">
+        {% for n in data.policy_news %}
+        <li>
+            <span class="sentiment {{ 'pos' if n.sentiment > 0 else 'neg' if n.sentiment < 0 else 'neu' }}">
+                {{ "%+.1f"|format(n.sentiment) }}
+            </span>
+            {{ n.title }}
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+{% if data.international_news %}
+<section class="section">
+    <h2>🌍 国际要闻</h2>
+    <ul class="news-list">
+        {% for n in data.international_news %}
+        <li>
+            <span class="sentiment {{ 'pos' if n.sentiment > 0 else 'neg' if n.sentiment < 0 else 'neu' }}">
+                {{ "%+.1f"|format(n.sentiment) }}
+            </span>
+            {{ n.title }}
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+{% endblock %}
